@@ -90,6 +90,8 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         }
     }
 
+    public var allowNonNumeric: Bool = false
+
     #if compiler(>=5.1)
     /// Available on iOS 13 and above just.
     public var countryCodePlaceholderColor: UIColor = {
@@ -411,19 +413,21 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
             return true
         }
 
+        let set = allowNonNumeric ? NSCharacterSet() : nonNumericSet
+
         let textAsNSString = text as NSString
         let changedRange = textAsNSString.substring(with: range) as NSString
         let modifiedTextField = textAsNSString.replacingCharacters(in: range, with: string)
 
         let filteredCharacters = modifiedTextField.filter {
-            String($0).rangeOfCharacter(from: (textField as! PhoneNumberTextField).nonNumericSet as CharacterSet) == nil
+            String($0).rangeOfCharacter(from: set as CharacterSet) == nil
         }
         let rawNumberString = String(filteredCharacters)
 
         let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
         var selectedTextRange: NSRange?
 
-        let nonNumericRange = (changedRange.rangeOfCharacter(from: self.nonNumericSet as CharacterSet).location != NSNotFound)
+        let nonNumericRange = (changedRange.rangeOfCharacter(from: set as CharacterSet).location != NSNotFound)
         if range.length == 1, string.isEmpty, nonNumericRange {
             selectedTextRange = self.selectionRangeForNumberReplacement(textField: textField, formattedText: modifiedTextField)
             textField.text = modifiedTextField
